@@ -3,12 +3,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 import pool from "./db";
 import jwt, { JwtPayload } from "jsonwebtoken"
-
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 
 function isJwtPayload(decoded: unknown): decoded is JwtPayload {
     return typeof decoded === "object" && decoded !== null
@@ -52,7 +53,12 @@ app.post("/login", async (req: Request, res: Response) =>{
             { expiresIn: "1h"}
         );
 
-        return res.json({ message: "ログイン成功！", token });
+        return res.cookie("token", token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "lax",
+            maxAge: 3600*1000
+        });
 
     } catch (err) {
         console.error(err);
